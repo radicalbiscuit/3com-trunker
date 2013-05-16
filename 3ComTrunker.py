@@ -6,8 +6,8 @@ from argparse import ArgumentParser
 from sys import version_info
 
 if version_info < (2, 7):
-    print('This script requires Python 2.7 or higher due to argparse.')
-    quit()
+    quit(('This script requires Python 2.7 or higher due to '
+          'its usage of argparse.'))
 
 def print_nonewline(data):
     if version_info < (3, 0):
@@ -37,7 +37,7 @@ SHELL_PROMPTS = [re.compile('^<.*?>$', re.M), re.compile('^\[.*?\]$', re.M)]
 ####################################################
 ###                    Setup                     ###
 ####################################################
-desc = 'A script to trunk and permit a vlan on all ports of a 3com switch.'
+desc = 'A script to trunk and permit vlans on all ports of a 3com switch.'
 parser = ArgumentParser(description=desc)
 
 parser.add_argument('-i',
@@ -96,6 +96,8 @@ print('Logging on to %s:%d' % (args['ip_address'], args['tcp_port']))
 telnet = telnetlib.Telnet(args['ip_address'], args['tcp_port'])
 print('Connected')
 
+# This method performs Telnet.expect() and raises an exception if
+# none of the items in the list of regexes are found.
 def expect_or_die(expect_list, timeout=5):
     response = telnet.expect(expect_list, timeout)
     if response[0] < 0:
@@ -118,12 +120,12 @@ try:
     telnet.write('system-view\n')
     expect_or_die(SHELL_PROMPTS)
     
-    print_nonewline('Programming the ports: ')
+    print_nonewline('Programming the ports:')
     for port in ports:
         port_prompt = '^\[.*?-GigabitEthernet1/0/{0}\]$'.format(port)
         port_prompt = [re.compile(port_prompt, re.M)]
         
-        # Here are where the commands are sent
+        # Here is where the commands are sent
         telnet.write('int gig 1/0/{0}\n'.format(port))
         expect_or_die(port_prompt)
         telnet.write('port link-type trunk\n')
